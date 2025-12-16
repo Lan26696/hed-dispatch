@@ -1,29 +1,116 @@
-# Create T3 App
+# 恒德新能源 - 智能调度仿真平台
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+基于 Next.js 14 的 CNG 智能调度管理系统，用于燃气场站、槽车调度、司机管理等业务。
 
-## What's next? How do I make an app with this?
+## 技术栈
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+| 类别   | 技术                     |
+| ------ | ------------------------ |
+| 框架   | Next.js 14 (App Router)  |
+| 语言   | TypeScript               |
+| 样式   | Tailwind CSS             |
+| 数据库 | MySQL 8.0+ / Drizzle ORM |
+| API    | tRPC                     |
+| 认证   | NextAuth.js              |
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## 快速开始
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+### 1. 安装依赖
 
-## Learn More
+```bash
+npm install
+```
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### 2. 配置环境变量
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+```bash
+cp .env.example .env
+```
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+编辑 `.env`：
 
-## How do I deploy this?
+```env
+AUTH_SECRET="your-secret-key"
+DATABASE_URL="mysql://user:password@localhost:3306/dbname"
+```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+> ⚠️ 密码特殊字符需 URL 编码：`@` → `%40`，`#` → `%23`
+
+### 3. 初始化数据库
+
+```bash
+npm run db:push    # 同步表结构
+npm run db:seed    # 初始化数据（可选）
+```
+
+### 4. 启动开发
+
+```bash
+npm run dev
+```
+
+访问 http://localhost:3000，默认账号：`admin` / `admin123`
+
+## 项目结构
+
+```
+src/
+├── app/                    # 页面视图层
+│   ├── (admin)/            # 后台管理
+│   │   ├── dispatch/       # 调度管理
+│   │   ├── message/        # 消息管理
+│   │   └── system/         # 系统管理
+│   └── login/              # 登录页
+│
+├── components/             # 可复用组件
+│   ├── ui/                 # 基础组件 (Button, Modal, Table...)
+│   └── layout/             # 布局组件 (PageHeader, SearchBar...)
+│
+├── server/
+│   ├── api/routers/        # Controller层 - 入参校验
+│   ├── services/           # Service层 - 业务逻辑
+│   ├── repositories/       # DAO层 - 数据访问
+│   └── db/                 # 数据库配置
+│
+├── lib/
+│   ├── utils/              # 工具函数
+│   ├── constants/          # 常量定义
+│   └── sms-sdk/            # 短信SDK
+│
+└── types/                  # 类型定义
+```
+
+## 分层架构
+
+```
+Router (入参校验) → Service (业务逻辑) → Repository (数据库操作)
+```
+
+| 层级       | 目录                   | 职责                   |
+| ---------- | ---------------------- | ---------------------- |
+| Controller | `server/api/routers/`  | 入参校验、调用 Service |
+| Service    | `server/services/`     | 业务逻辑处理           |
+| Repository | `server/repositories/` | 数据库 CRUD            |
+| Component  | `components/`          | 可复用 UI 组件         |
+
+## 常用命令
+
+```bash
+npm run dev          # 开发服务器
+npm run build        # 生产构建
+npm run db:push      # 同步数据库
+npm run db:seed      # 初始化数据
+npm run db:studio    # 数据库可视化
+npm run lint         # 代码检查
+```
+
+## 文档
+
+- [项目设计文档](./docs/project-design.md) - 技术方案、数据库设计、UI规范
+- [重构方案](./docs/refactor-plan.md) - 分层架构、命名规范、代码示例
+- [Drizzle 指南](./docs/drizzle-guide.md) - ORM 使用说明
+
+## 环境要求
+
+- Node.js 18+
+- MySQL 8.0.16+

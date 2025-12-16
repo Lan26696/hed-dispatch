@@ -21,35 +21,108 @@
 
 ```
 src/
-├── app/                      # Next.js App Router
-│   ├── (admin)/              # 后台管理路由组
-│   │   ├── layout.tsx        # 后台布局（侧边栏+顶栏）
-│   │   ├── page.tsx          # 工作台/仪表盘
-│   │   ├── dispatch/         # 调度管理
-│   │   │   └── board/        # 调度看板
-│   │   ├── message/          # 消息管理
-│   │   │   ├── templates/    # 短信模板
-│   │   │   └── records/      # 发送记录
-│   │   └── system/           # 系统管理
-│   │       ├── users/        # 用户管理
-│   │       ├── roles/        # 角色管理
-│   │       └── menus/        # 菜单管理
-│   ├── login/                # 登录页
-│   └── _components/          # 共享组件
-├── server/
-│   ├── api/
-│   │   ├── root.ts           # tRPC 路由聚合
-│   │   └── routers/          # 各业务路由
-│   ├── auth/                 # NextAuth 配置
-│   └── db/
-│       ├── schema.ts         # Drizzle 表结构
-│       ├── seed.ts           # 种子数据
-│       └── index.ts          # 数据库连接
-├── lib/
-│   ├── sms-sdk/              # 亿美软通 SDK
-│   └── services/             # 业务服务封装
-└── trpc/                     # tRPC 客户端配置
+├── app/                          # 【视图层】Next.js App Router
+│   ├── (admin)/                  # 后台管理路由组
+│   │   ├── layout.tsx            # 后台布局（侧边栏+顶栏）
+│   │   ├── page.tsx              # 工作台/仪表盘
+│   │   ├── dispatch/             # 调度管理
+│   │   │   └── board/            # 调度看板
+│   │   ├── message/              # 消息管理
+│   │   │   ├── templates/        # 短信模板
+│   │   │   └── records/          # 发送记录
+│   │   └── system/               # 系统管理
+│   │       ├── users/            # 用户管理
+│   │       ├── roles/            # 角色管理
+│   │       └── menus/            # 菜单管理
+│   ├── login/                    # 登录页
+│   └── _components/              # 页面级组件
+│
+├── components/                   # 【组件层】可复用UI组件
+│   ├── ui/                       # 基础UI组件
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Select.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Table.tsx
+│   │   ├── Pagination.tsx
+│   │   ├── Tag.tsx
+│   │   ├── Card.tsx
+│   │   └── index.ts
+│   ├── layout/                   # 布局组件
+│   │   ├── PageHeader.tsx
+│   │   ├── SearchBar.tsx
+│   │   └── index.ts
+│   └── index.ts                  # 统一导出
+│
+├── server/                       # 【服务端】
+│   ├── api/                      # Controller层（tRPC路由）
+│   │   ├── routers/              # 各业务路由
+│   │   │   ├── user.ts
+│   │   │   ├── role.ts
+│   │   │   ├── menu.ts
+│   │   │   ├── smsTemplate.ts
+│   │   │   └── smsRecord.ts
+│   │   ├── root.ts
+│   │   └── trpc.ts
+│   │
+│   ├── services/                 # 【Service层】业务逻辑
+│   │   ├── user.service.ts
+│   │   ├── role.service.ts
+│   │   ├── menu.service.ts
+│   │   ├── sms.service.ts
+│   │   └── index.ts
+│   │
+│   ├── repositories/             # 【DAO层】数据访问
+│   │   ├── user.repository.ts
+│   │   ├── role.repository.ts
+│   │   ├── menu.repository.ts
+│   │   ├── sms.repository.ts
+│   │   └── index.ts
+│   │
+│   ├── db/                       # 数据库配置
+│   │   ├── schema.ts             # Drizzle 表结构
+│   │   ├── seed.ts               # 种子数据
+│   │   └── index.ts              # 数据库连接
+│   │
+│   └── auth/                     # 认证配置
+│
+├── lib/                          # 【工具库】
+│   ├── utils/                    # 通用工具函数
+│   │   ├── date.ts
+│   │   ├── format.ts
+│   │   ├── validate.ts
+│   │   └── index.ts
+│   ├── constants/                # 常量定义
+│   │   ├── status.ts
+│   │   ├── config.ts
+│   │   └── index.ts
+│   ├── services/                 # 外部服务封装
+│   │   └── emay-sms.ts
+│   └── sms-sdk/                  # 亿美软通 SDK
+│
+├── types/                        # 【类型定义】
+│   ├── api.ts                    # API相关类型
+│   ├── models.ts                 # 数据模型类型
+│   ├── common.ts                 # 通用类型
+│   └── index.ts
+│
+├── styles/                       # 样式文件
+│   └── globals.css
+│
+└── trpc/                         # tRPC 客户端配置
 ```
+
+## 分层架构说明
+
+| 层级       | 目录                       | 职责                      |
+| ---------- | -------------------------- | ------------------------- |
+| View       | `src/app/`                 | 页面渲染、用户交互        |
+| Component  | `src/components/`          | 可复用UI组件              |
+| Controller | `src/server/api/routers/`  | 入参校验、调用Service     |
+| Service    | `src/server/services/`     | 业务逻辑处理              |
+| Repository | `src/server/repositories/` | 数据库操作                |
+| Utils      | `src/lib/`                 | 工具函数、常量、第三方SDK |
+| Types      | `src/types/`               | TypeScript类型定义        |
 
 ## 数据库设计
 

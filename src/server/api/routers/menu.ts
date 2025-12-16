@@ -1,7 +1,42 @@
+/**
+ * 菜单路由（Controller层）
+ */
+
 import { z } from "zod";
 import { eq, asc } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { menuService } from "~/server/services";
 import { menus, roleMenus } from "~/server/db/schema";
+
+// 入参 Schema 定义
+const createInputSchema = z.object({
+  parentId: z.number().default(0),
+  name: z.string().min(1, "菜单名称不能为空"),
+  path: z.string().optional(),
+  icon: z.string().optional(),
+  component: z.string().optional(),
+  permission: z.string().optional(),
+  type: z.number().default(2),
+  sort: z.number().default(0),
+  status: z.number().default(1),
+  visible: z.number().default(1),
+});
+
+const updateInputSchema = z.object({
+  id: z.number(),
+  parentId: z.number().optional(),
+  name: z.string().min(1).optional(),
+  path: z.string().optional(),
+  icon: z.string().optional(),
+  component: z.string().optional(),
+  permission: z.string().optional(),
+  type: z.number().optional(),
+  sort: z.number().optional(),
+  status: z.number().optional(),
+  visible: z.number().optional(),
+});
+
+const idSchema = z.object({ id: z.number() });
 
 export const menuRouter = createTRPCRouter({
   // 获取当前用户的菜单
@@ -27,69 +62,34 @@ export const menuRouter = createTRPCRouter({
     return buildMenuTree(menuList);
   }),
 
-  // 获取所有菜单（管理用）
-  list: protectedProcedure.query(async ({ ctx }) => {
-    const menuList = await ctx.db.query.menus.findMany({
-      orderBy: [asc(menus.sort)],
-    });
-    return buildMenuTree(menuList);
-  }),
+  // 获取所有菜单（树形）
+  list: protectedProcedure.query(({ ctx }) => menuService.getTree(ctx.db)),
 
   // 获取所有菜单（平铺）
-  all: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.query.menus.findMany({ orderBy: [asc(menus.sort)] });
-  }),
+  all: protectedProcedure.query(({ ctx }) => menuService.getAll(ctx.db)),
 
   // 创建菜单
   create: protectedProcedure
-    .input(
-      z.object({
-        parentId: z.number().default(0),
-        name: z.string().min(1),
-        path: z.string().optional(),
-        icon: z.string().optional(),
-        type: z.number().default(2),
-        sort: z.number().default(0),
-        status: z.number().default(1),
-        visible: z.number().default(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(menus).values(input);
-      return { success: true };
-    }),
+    .input(createInputSchema)
+    .mutation(({ ctx, input }) => menuService.create(ctx.db, input)),
 
   // 更新菜单
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        parentId: z.number().optional(),
-        name: z.string().min(1).optional(),
-        path: z.string().optional(),
-        icon: z.string().optional(),
-        type: z.number().optional(),
-        sort: z.number().optional(),
-        status: z.number().optional(),
-        visible: z.number().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
-      await ctx.db.update(menus).set(data).where(eq(menus.id, id));
-      return { success: true };
-    }),
+    .input(updateInputSchema)
+    .mutation(({ ctx, input }) => menuService.update(ctx.db, input)),
 
   // 删除菜单
   delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(idSchema)
     .mutation(async ({ ctx, input }) => {
+      // 先删除角色菜单关联
       await ctx.db.delete(roleMenus).where(eq(roleMenus.menuId, input.id));
-      await ctx.db.delete(menus).where(eq(menus.id, input.id));
-      return { success: true };
+      // 再删除菜单
+      return menuService.delete(ctx.db, input.id);
     }),
 });
 
+// 构建菜单树（用于用户菜单）
 interface MenuItem {
   id: number;
   parentId: number | null;

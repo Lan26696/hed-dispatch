@@ -1,6 +1,7 @@
 {
-  "name": "y",
+  "name": "hed-dispatch",
   "version": "0.1.0",
+  "description": "恒德新能源 - 智能调度仿真平台",
   "private": true,
   "type": "module",
   "scripts": {

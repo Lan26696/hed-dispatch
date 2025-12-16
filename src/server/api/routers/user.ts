@@ -1,125 +1,78 @@
+/**
+ * 用户路由（Controller层）
+ * 职责：入参校验、调用Service
+ */
+
 import { z } from "zod";
-import { eq, like, and, desc } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { users } from "~/server/db/schema";
+import { userService } from "~/server/services";
+
+// 入参 Schema 定义
+const listInputSchema = z.object({
+  keyword: z.string().optional(),
+  roleId: z.number().optional(),
+  status: z.number().optional(),
+  page: z.number().default(1),
+  pageSize: z.number().default(10),
+});
+
+const createInputSchema = z.object({
+  username: z.string().min(2, "用户名至少2个字符"),
+  password: z.string().min(6, "密码至少6个字符"),
+  name: z.string().optional(),
+  email: z.string().email("邮箱格式不正确").optional(),
+  phone: z.string().optional(),
+  roleId: z.number().optional(),
+  status: z.number().default(1),
+});
+
+const updateInputSchema = z.object({
+  id: z.string(),
+  username: z.string().min(2).optional(),
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  roleId: z.number().optional(),
+  status: z.number().optional(),
+});
+
+const resetPasswordSchema = z.object({
+  id: z.string(),
+  password: z.string().min(6, "密码至少6个字符"),
+});
+
+const idSchema = z.object({ id: z.string() });
 
 export const userRouter = createTRPCRouter({
   // 获取用户列表
   list: protectedProcedure
-    .input(
-      z.object({
-        keyword: z.string().optional(),
-        roleId: z.number().optional(),
-        status: z.number().optional(),
-        page: z.number().default(1),
-        pageSize: z.number().default(10),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { keyword, roleId, status, page, pageSize } = input;
-      const conditions = [];
-
-      if (keyword) {
-        conditions.push(like(users.username, `%${keyword}%`));
-      }
-      if (roleId !== undefined) {
-        conditions.push(eq(users.roleId, roleId));
-      }
-      if (status !== undefined) {
-        conditions.push(eq(users.status, status));
-      }
-
-      const where = conditions.length > 0 ? and(...conditions) : undefined;
-
-      const list = await ctx.db.query.users.findMany({
-        where,
-        with: { role: true },
-        orderBy: [desc(users.createdAt)],
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      });
-
-      // 简单计数
-      const allUsers = await ctx.db.query.users.findMany({ where });
-      const total = allUsers.length;
-
-      return { list, total, page, pageSize };
-    }),
+    .input(listInputSchema)
+    .query(({ ctx, input }) => userService.list(ctx.db, input)),
 
   // 获取单个用户
   getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.query.users.findFirst({
-        where: eq(users.id, input.id),
-        with: { role: true },
-      });
-    }),
+    .input(idSchema)
+    .query(({ ctx, input }) => userService.getById(ctx.db, input.id)),
 
   // 创建用户
   create: protectedProcedure
-    .input(
-      z.object({
-        username: z.string().min(2),
-        password: z.string().min(6),
-        name: z.string().optional(),
-        email: z.string().email().optional(),
-        phone: z.string().optional(),
-        roleId: z.number().optional(),
-        status: z.number().default(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const hashedPassword = await bcrypt.hash(input.password, 10);
-      await ctx.db.insert(users).values({
-        ...input,
-        password: hashedPassword,
-      });
-      return { success: true };
-    }),
+    .input(createInputSchema)
+    .mutation(({ ctx, input }) => userService.create(ctx.db, input)),
 
   // 更新用户
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        username: z.string().min(2).optional(),
-        name: z.string().optional(),
-        email: z.string().email().optional(),
-        phone: z.string().optional(),
-        roleId: z.number().optional(),
-        status: z.number().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
-      await ctx.db.update(users).set(data).where(eq(users.id, id));
-      return { success: true };
-    }),
+    .input(updateInputSchema)
+    .mutation(({ ctx, input }) => userService.update(ctx.db, input)),
 
   // 重置密码
   resetPassword: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        password: z.string().min(6),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const hashedPassword = await bcrypt.hash(input.password, 10);
-      await ctx.db
-        .update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.id, input.id));
-      return { success: true };
-    }),
+    .input(resetPasswordSchema)
+    .mutation(({ ctx, input }) =>
+      userService.resetPassword(ctx.db, input.id, input.password),
+    ),
 
   // 删除用户
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(users).where(eq(users.id, input.id));
-      return { success: true };
-    }),
+    .input(idSchema)
+    .mutation(({ ctx, input }) => userService.delete(ctx.db, input.id)),
 });
