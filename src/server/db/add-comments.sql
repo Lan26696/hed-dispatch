@@ -1,0 +1,182 @@
+-- =============================================
+-- 为所有表和字段添加中文注释
+-- 运行方式: mysql -u root -p database_name < add-comments.sql
+-- =============================================
+
+-- ==================== 系统表 ====================
+
+-- 用户表
+ALTER TABLE sys_user COMMENT '系统用户表';
+ALTER TABLE sys_user 
+  MODIFY COLUMN id VARCHAR(255) NOT NULL COMMENT '用户ID',
+  MODIFY COLUMN username VARCHAR(50) NOT NULL COMMENT '用户名',
+  MODIFY COLUMN password VARCHAR(255) NOT NULL COMMENT '密码',
+  MODIFY COLUMN name VARCHAR(255) COMMENT '姓名',
+  MODIFY COLUMN email VARCHAR(255) COMMENT '邮箱',
+  MODIFY COLUMN phone VARCHAR(20) COMMENT '手机号',
+  MODIFY COLUMN avatar VARCHAR(255) COMMENT '头像URL',
+  MODIFY COLUMN status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
+  MODIFY COLUMN role_id INT COMMENT '角色ID',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 角色表
+ALTER TABLE sys_role COMMENT '系统角色表';
+ALTER TABLE sys_role
+  MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT COMMENT '角色ID',
+  MODIFY COLUMN name VARCHAR(50) NOT NULL COMMENT '角色名称',
+  MODIFY COLUMN code VARCHAR(50) NOT NULL COMMENT '角色编码',
+  MODIFY COLUMN description VARCHAR(255) COMMENT '角色描述',
+  MODIFY COLUMN status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 菜单表
+ALTER TABLE sys_menu COMMENT '系统菜单表';
+ALTER TABLE sys_menu
+  MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT COMMENT '菜单ID',
+  MODIFY COLUMN parent_id INT DEFAULT 0 COMMENT '父菜单ID',
+  MODIFY COLUMN name VARCHAR(50) NOT NULL COMMENT '菜单名称',
+  MODIFY COLUMN path VARCHAR(255) COMMENT '路由路径',
+  MODIFY COLUMN icon VARCHAR(100) COMMENT '图标',
+  MODIFY COLUMN component VARCHAR(255) COMMENT '组件路径',
+  MODIFY COLUMN permission VARCHAR(100) COMMENT '权限标识',
+  MODIFY COLUMN type TINYINT NOT NULL DEFAULT 1 COMMENT '类型：1目录 2菜单 3按钮',
+  MODIFY COLUMN visible TINYINT NOT NULL DEFAULT 1 COMMENT '是否可见：1是 0否',
+  MODIFY COLUMN sort INT NOT NULL DEFAULT 0 COMMENT '排序',
+  MODIFY COLUMN status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 角色菜单关联表
+ALTER TABLE sys_role_menu COMMENT '角色菜单关联表';
+ALTER TABLE sys_role_menu
+  MODIFY COLUMN role_id INT NOT NULL COMMENT '角色ID',
+  MODIFY COLUMN menu_id INT NOT NULL COMMENT '菜单ID';
+
+-- ==================== 业务表 ====================
+
+-- 场站表
+ALTER TABLE biz_station COMMENT '场站信息表';
+ALTER TABLE biz_station
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '场站ID',
+  MODIFY COLUMN name VARCHAR(100) NOT NULL COMMENT '场站名称',
+  MODIFY COLUMN code VARCHAR(50) COMMENT '场站编码',
+  MODIFY COLUMN address VARCHAR(255) COMMENT '地址',
+  MODIFY COLUMN longitude DECIMAL(10,7) COMMENT '经度',
+  MODIFY COLUMN latitude DECIMAL(10,7) COMMENT '纬度',
+  MODIFY COLUMN gas_source JSON COMMENT '气源构成',
+  MODIFY COLUMN total_plan DECIMAL(12,2) DEFAULT 0 COMMENT '日计划量(m³)',
+  MODIFY COLUMN contact_person VARCHAR(50) COMMENT '联系人',
+  MODIFY COLUMN contact_phone VARCHAR(20) COMMENT '联系电话',
+  MODIFY COLUMN station_type ENUM('decompression','mother','filling','distribution','storage','other') NOT NULL DEFAULT 'filling' COMMENT '场站类型：解压站/母站/加气站/配送中心/储气站/其他',
+  MODIFY COLUMN status ENUM('active','inactive','maintenance') NOT NULL DEFAULT 'active' COMMENT '状态：运营中/停用/维护中',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 司机表
+ALTER TABLE biz_driver COMMENT '司机信息表';
+ALTER TABLE biz_driver
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '司机ID',
+  MODIFY COLUMN name VARCHAR(50) NOT NULL COMMENT '姓名',
+  MODIFY COLUMN phone VARCHAR(20) NOT NULL COMMENT '手机号',
+  MODIFY COLUMN id_card VARCHAR(20) COMMENT '身份证号',
+  MODIFY COLUMN license_number VARCHAR(50) COMMENT '驾驶证号',
+  MODIFY COLUMN license_type VARCHAR(10) COMMENT '驾照类型',
+  MODIFY COLUMN company VARCHAR(100) COMMENT '所属公司',
+  MODIFY COLUMN user_id VARCHAR(255) COMMENT '关联用户ID',
+  MODIFY COLUMN status ENUM('available','busy','offline','inactive') NOT NULL DEFAULT 'available' COMMENT '状态：空闲/忙碌/离线/停用',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 车辆表
+ALTER TABLE biz_vehicle COMMENT '车辆信息表';
+ALTER TABLE biz_vehicle
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '车辆ID',
+  MODIFY COLUMN plate VARCHAR(20) NOT NULL COMMENT '车牌号',
+  MODIFY COLUMN type ENUM('CNG_Trailer','PNG_Pipe','Other') NOT NULL DEFAULT 'CNG_Trailer' COMMENT '车辆类型：CNG拖车/PNG管车/其他',
+  MODIFY COLUMN capacity DECIMAL(10,2) DEFAULT 0 COMMENT '容量(m³)',
+  MODIFY COLUMN driver_id VARCHAR(50) COMMENT '绑定司机ID',
+  MODIFY COLUMN status ENUM('available','busy','maintenance','inactive') NOT NULL DEFAULT 'available' COMMENT '状态：空闲/忙碌/维护中/停用',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 日计划表
+ALTER TABLE biz_daily_plan COMMENT '日计划表';
+ALTER TABLE biz_daily_plan
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '计划ID',
+  MODIFY COLUMN plan_date DATE NOT NULL COMMENT '计划日期',
+  MODIFY COLUMN station_id VARCHAR(50) NOT NULL COMMENT '场站ID',
+  MODIFY COLUMN direction ENUM('upstream','downstream') NOT NULL COMMENT '方向：上游供气/下游用气',
+  MODIFY COLUMN plan_volume DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '计划量(m³)',
+  MODIFY COLUMN actual_volume DECIMAL(12,2) DEFAULT 0 COMMENT '实际完成量(m³)',
+  MODIFY COLUMN hourly_plans JSON COMMENT '小时计划分布',
+  MODIFY COLUMN status ENUM('draft','confirmed','completed') NOT NULL DEFAULT 'draft' COMMENT '状态：草稿/已确认/已完成',
+  MODIFY COLUMN notes TEXT COMMENT '备注',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  MODIFY COLUMN created_by VARCHAR(50) COMMENT '创建人';
+
+-- 预约表
+ALTER TABLE biz_reservation COMMENT '预约信息表';
+ALTER TABLE biz_reservation
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '预约ID',
+  MODIFY COLUMN station_id VARCHAR(50) NOT NULL COMMENT '场站ID',
+  MODIFY COLUMN driver_id VARCHAR(50) NOT NULL COMMENT '司机ID',
+  MODIFY COLUMN vehicle_id VARCHAR(50) NOT NULL COMMENT '车辆ID',
+  MODIFY COLUMN appointment_time TIMESTAMP NOT NULL COMMENT '预约时间',
+  MODIFY COLUMN planned_quantity DECIMAL(10,2) DEFAULT 0 COMMENT '计划装卸量(m³)',
+  MODIFY COLUMN actual_quantity DECIMAL(10,2) COMMENT '实际装卸量(m³)',
+  MODIFY COLUMN status ENUM('pending','confirmed','arrived','loading','completed','cancelled') NOT NULL DEFAULT 'pending' COMMENT '状态：待确认/已确认/已到达/装卸中/已完成/已取消',
+  MODIFY COLUMN notes TEXT COMMENT '备注',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 调度单表
+ALTER TABLE biz_dispatch_order COMMENT '调度单表';
+ALTER TABLE biz_dispatch_order
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '调度单ID',
+  MODIFY COLUMN order_no VARCHAR(50) COMMENT '调度单号',
+  MODIFY COLUMN reservation_id VARCHAR(50) COMMENT '关联预约ID',
+  MODIFY COLUMN station_id VARCHAR(50) NOT NULL COMMENT '场站ID',
+  MODIFY COLUMN driver_id VARCHAR(50) NOT NULL COMMENT '司机ID',
+  MODIFY COLUMN vehicle_id VARCHAR(50) NOT NULL COMMENT '车辆ID',
+  MODIFY COLUMN scheduled_time TIMESTAMP NOT NULL COMMENT '计划时间',
+  MODIFY COLUMN actual_arrival_time TIMESTAMP COMMENT '实际到达时间',
+  MODIFY COLUMN actual_departure_time TIMESTAMP COMMENT '实际离开时间',
+  MODIFY COLUMN load_amount DECIMAL(10,2) COMMENT '装卸量(m³)',
+  MODIFY COLUMN status ENUM('scheduled','notified','arrived','loading','completed','cancelled') NOT NULL DEFAULT 'scheduled' COMMENT '状态：已排程/已通知/已到达/装卸中/已完成/已取消',
+  MODIFY COLUMN notes TEXT COMMENT '备注',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 短信模板表
+ALTER TABLE biz_sms_template COMMENT '短信模板表';
+ALTER TABLE biz_sms_template
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '模板ID',
+  MODIFY COLUMN name VARCHAR(100) NOT NULL COMMENT '模板名称',
+  MODIFY COLUMN code VARCHAR(50) NOT NULL COMMENT '模板编码',
+  MODIFY COLUMN content TEXT NOT NULL COMMENT '模板内容',
+  MODIFY COLUMN variables JSON COMMENT '变量列表，格式：[{"key":"变量名","label":"中文标签"}]',
+  MODIFY COLUMN status ENUM('active','inactive','pending') NOT NULL DEFAULT 'pending' COMMENT '状态：已启用/已禁用/待审核',
+  MODIFY COLUMN description VARCHAR(255) COMMENT '模板描述',
+  MODIFY COLUMN created_by VARCHAR(50) COMMENT '创建人',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+
+-- 短信发送记录表
+ALTER TABLE biz_sms_record COMMENT '短信发送记录表';
+ALTER TABLE biz_sms_record
+  MODIFY COLUMN id VARCHAR(50) NOT NULL COMMENT '记录ID',
+  MODIFY COLUMN template_id VARCHAR(50) COMMENT '模板ID',
+  MODIFY COLUMN template_code VARCHAR(50) COMMENT '模板编码',
+  MODIFY COLUMN template_name VARCHAR(100) COMMENT '模板名称',
+  MODIFY COLUMN mobile VARCHAR(20) NOT NULL COMMENT '接收手机号',
+  MODIFY COLUMN content TEXT NOT NULL COMMENT '短信内容',
+  MODIFY COLUMN variables JSON COMMENT '变量值，格式：{"变量名":"值"}',
+  MODIFY COLUMN sms_id VARCHAR(100) COMMENT '短信平台返回ID',
+  MODIFY COLUMN status ENUM('pending','success','failed') NOT NULL DEFAULT 'pending' COMMENT '状态：发送中/成功/失败',
+  MODIFY COLUMN error_msg VARCHAR(255) COMMENT '错误信息',
+  MODIFY COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  MODIFY COLUMN sent_at TIMESTAMP COMMENT '发送时间',
+  MODIFY COLUMN created_by VARCHAR(50) COMMENT '创建人';
