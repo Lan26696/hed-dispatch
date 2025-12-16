@@ -104,12 +104,6 @@ npm run db:studio    # 数据库可视化
 npm run lint         # 代码检查
 ```
 
-## 文档
-
-- [项目设计文档](./docs/project-design.md) - 技术方案、数据库设计、UI规范
-- [重构方案](./docs/refactor-plan.md) - 分层架构、命名规范、代码示例
-- [Drizzle 指南](./docs/drizzle-guide.md) - ORM 使用说明
-
 ## 环境要求
 
 - Node.js 18+
